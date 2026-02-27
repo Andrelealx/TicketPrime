@@ -6,15 +6,15 @@
 
 ## 📖 Histórias de Usuário
 
-| ID | Ator | Como | Quero | Para | Prioridade |
-|----|------|------|-------|------|------------|
-| HU-01 | Organizador de Eventos | Como Organizador de Eventos | Quero cadastrar um novo evento com nome, data, capacidade e preço padrão | Para que o sistema possa controlar a venda de ingressos com as regras corretas | 🔴 Alta |
-| HU-02 | Administrador do Sistema | Como Administrador do Sistema | Quero cadastrar cupons de desconto com código, porcentagem e valor mínimo | Para que compradores elegíveis possam receber desconto nas compras dentro das regras | 🔴 Alta |
-| HU-03 | Comprador | Como Comprador | Quero me cadastrar informando CPF, nome e e-mail | Para que eu possa realizar compras de ingressos no sistema | 🔴 Alta |
-| HU-04 | Comprador | Como Comprador | Quero reservar um ingresso para um evento informando meu CPF e, opcionalmente, um cupom | Para garantir minha vaga com o melhor preço disponível | 🔴 Alta |
-| HU-05 | Comprador | Como Comprador | Quero consultar todas as minhas reservas pelo meu CPF | Para acompanhar os eventos que comprei e verificar os valores pagos | 🟡 Média |
-| HU-06 | Sistema | Como Sistema | Quero bloquear a compra quando o evento já atingiu sua capacidade total | Para evitar que ingressos sejam vendidos além do limite físico do local | 🔴 Alta |
-| HU-07 | Sistema | Como Sistema | Quero bloquear a compra quando um mesmo CPF já possui 2 reservas para o mesmo evento | Para impedir que cambistas monopolizem ingressos de alta demanda | 🔴 Alta |
+| ID | Ator | Como | Quero | Para |
+|----|------|------|-------|------|
+| HU-01 | Organizador de Eventos | Como Organizador de Eventos | Quero cadastrar um novo evento com nome, data, capacidade e preço padrão | Para que o sistema possa controlar a venda de ingressos com as regras corretas |
+| HU-02 | Administrador do Sistema | Como Administrador do Sistema | Quero cadastrar cupons de desconto com código, porcentagem e valor mínimo | Para que compradores elegíveis possam receber desconto nas compras dentro das regras |
+| HU-03 | Comprador | Como Comprador | Quero me cadastrar informando CPF, nome e e-mail | Para que eu possa realizar compras de ingressos no sistema |
+| HU-04 | Comprador | Como Comprador | Quero reservar um ingresso para um evento informando meu CPF e, opcionalmente, um cupom | Para garantir minha vaga com o melhor preço disponível |
+| HU-05 | Comprador | Como Comprador | Quero consultar todas as minhas reservas pelo meu CPF | Para acompanhar os eventos que comprei e verificar os valores pagos |
+| HU-06 | Sistema | Como Sistema | Quero bloquear a compra quando o evento já atingiu sua capacidade total | Para evitar que ingressos sejam vendidos além do limite físico do local |
+| HU-07 | Sistema | Como Sistema | Quero bloquear a compra quando um mesmo CPF já possui 2 reservas para o mesmo evento | Para impedir que cambistas monopolizem ingressos de alta demanda |
 
 ---
 

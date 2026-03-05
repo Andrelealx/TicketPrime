@@ -145,3 +145,73 @@ Então o sistema retorna HTTP 400 com mensagem de limite por CPF atingido
 ---
 
 > **Legenda de Status:** ⬜ Pendente &nbsp;|&nbsp; ✅ Aprovado &nbsp;|&nbsp; ❌ Reprovado &nbsp;|&nbsp; 🔄 Em Revisão
+
+---
+
+## 🧩 DoD Consolidado de Execução
+
+Baseado em todos os critérios deste documento, o item só é considerado "Done" quando implementação, validação BDD, testes e evidência estiverem concluídos.
+
+### 1) DoD Funcional (Histórias de Usuário)
+
+- [ ] HU-01: `POST /api/eventos` cria evento com `nome`, `data`, `capacidade`, `precoPadrao` e retorna `HTTP 201`.
+- [ ] HU-02: `POST /api/cupons` cria cupom com `codigo`, `porcentagem`, `valorMinimo` e retorna `HTTP 201`.
+- [ ] HU-03: `POST /api/usuarios` cria usuário com `cpf`, `nome`, `email`; CPF duplicado retorna `HTTP 400`.
+- [ ] HU-04: `POST /api/reservas` cria reserva para CPF cadastrado e evento com vaga; sem cupom usa preço cheio; com cupom válido aplica desconto quando regra de valor mínimo for atendida.
+- [ ] HU-05: `GET /api/reservas/{cpf}` retorna reservas do CPF com `NomeEvento` (via JOIN) e `ValorFinalPago`; sem reservas retorna `HTTP 200` com lista vazia.
+- [ ] HU-06: Reserva bloqueada quando capacidade do evento foi atingida (`HTTP 400`).
+- [ ] HU-07: Reserva bloqueada quando CPF já possui 2 reservas para o mesmo evento (`HTTP 400`).
+
+### 2) DoD de Qualidade (BDD e Validações)
+
+- [ ] Requisitos registrados no formato de histórias: `Como`, `Quero`, `Para`.
+- [ ] Critérios BDD registrados no formato: `Dado`, `Quando`, `Então`.
+- [ ] Todos os cenários de erro usam fail-fast (`BadRequest` ou `NotFound`) com mensagem clara.
+- [ ] Regras R1, R2, R3 e R4 cobertas por testes automatizados.
+
+### 3) DoD Técnico - AV1 (Fundação)
+
+- [ ] `README.md` na raiz com instruções de execução em bloco de código.
+- [ ] Script SQL em `/db` com `CREATE TABLE` para `Usuarios`, `Eventos`, `Cupons`, `Reservas`, incluindo FKs.
+- [ ] API minimal em `/src` com mapeamento de endpoints obrigatórios da AV1 (`MapGet` e `MapPost`).
+- [ ] Todas as queries Dapper usam parâmetros (`@Param`), sem concatenação ou interpolação de SQL.
+- [ ] Projeto de testes em `/tests` com pelo menos um teste `[Fact]` ou `[Theory]`.
+- [ ] Todo teste possui `Assert` válido.
+
+### 4) DoD Técnico - AV2 (Arquitetura e Operação)
+
+- [ ] ADR em `/docs` com seções: `## Contexto`, `## Decisão`, `## Consequências`.
+- [ ] Em `## Consequências`, existem `Prós` e `Contras` explícitos.
+- [ ] `/docs/operacao.md` contém matriz de riscos com colunas: `Risco`, `Probabilidade`, `Impacto`, `Ação`, `Gatilho`.
+- [ ] `/docs/operacao.md` define métrica com: `Fórmula`, `Fonte de Dados`, `Frequência`, `Ação se Violado`.
+- [ ] Documento explicita `SLO` com porcentagem e janela de tempo.
+- [ ] Documento explicita `Error Budget Policy`.
+- [ ] Nenhum arquivo `.cs` contém credenciais em texto plano (`Password=`, `User Id=`).
+- [ ] `release_checklist_final.md` existe na raiz com todos os itens finais marcados.
+
+### 5) DoD de Regras de Negócio (Endpoints)
+
+- [ ] R1 Integridade: em `POST /api/reservas`, valida existência de `UsuarioCpf` e `EventoId` antes do insert.
+- [ ] R2 Limite por CPF: bloqueia terceira reserva do mesmo CPF no mesmo evento.
+- [ ] R3 Estoque: bloqueia reserva quando total de reservas >= `CapacidadeTotal`.
+- [ ] R4 Motor de cupons: aplica desconto somente se `PrecoPadrao >= ValorMinimoRegra`.
+- [ ] Consulta com JOIN: `GET /api/reservas/{cpf}` retorna nome do evento (não apenas ID).
+
+### 6) DoD de Entrega (Regras Gerais)
+
+- [ ] Estrutura de pastas na raiz: `/docs`, `/db`, `/src`, `/tests`.
+- [ ] Entrega feita por URL de repositório GitHub ou GitLab.
+- [ ] Grupo respeita tamanho entre 5 e 6 alunos.
+- [ ] Persistência com Dapper (sem Entity Framework e sem banco em memória).
+- [ ] Nomes de pastas, tabelas, colunas e rotas seguem exatamente o especificado nos requisitos.
+
+### 7) Condição de Conclusão
+
+Um item (história, regra, documento ou endpoint) só é considerado "Done" quando:
+
+- [ ] Implementação concluída.
+- [ ] Critério BDD correspondente atendido.
+- [ ] Teste automatizado passando.
+- [ ] Evidência registrada (código, teste, documento ou resposta de endpoint).
+
+O projeto só é considerado "Done" quando todos os itens deste documento estiverem marcados.

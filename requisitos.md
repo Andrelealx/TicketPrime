@@ -7,15 +7,43 @@
 ## 📖 Histórias de Usuário
 
 | ID | Ator | Como | Quero | Para |
-|----|------|------|-------|------|
-| HU-01 | Organizador de Eventos | Como Organizador de Eventos | Quero cadastrar um novo evento com nome, data, capacidade e preço padrão | Para que o sistema possa controlar a venda de ingressos com as regras corretas |
-| HU-02 | Administrador do Sistema | Como Administrador do Sistema | Quero cadastrar cupons de desconto com código, porcentagem e valor mínimo | Para que compradores elegíveis possam receber desconto nas compras dentro das regras |
-| HU-03 | Comprador | Como Comprador | Quero me cadastrar informando CPF, nome e e-mail | Para que eu possa realizar compras de ingressos no sistema |
-| HU-04 | Comprador | Como Comprador | Quero reservar um ingresso para um evento informando meu CPF e, opcionalmente, um cupom | Para garantir minha vaga com o melhor preço disponível |
-| HU-05 | Comprador | Como Comprador | Quero consultar todas as minhas reservas pelo meu CPF | Para acompanhar os eventos que comprei e verificar os valores pagos |
-| HU-06 | Sistema | Como Sistema | Quero bloquear a compra quando o evento já atingiu sua capacidade total | Para evitar que ingressos sejam vendidos além do limite físico do local |
-| HU-07 | Sistema | Como Sistema | Quero bloquear a compra quando um mesmo CPF já possui 2 reservas para o mesmo evento | Para impedir que cambistas monopolizem ingressos de alta demanda |
-
+|---|---|---|---|---|
+| HU-01 | Cliente | Como Cliente | Quero informar meu CPF, nome e e-mail | Para realizar meu cadastro |
+| HU-02 | Sistema | Como Sistema | Quero validar se o CPF é único | Para evitar cadastros duplicados |
+| HU-03 | Admin | Como Admin | Quero cadastrar novos eventos | Para disponibilizá-los ao público |
+| HU-04 | Admin | Como Admin | Quero definir a capacidade máxima | Para controlar a lotação |
+| HU-05 | Cliente | Como Cliente | Quero selecionar um evento | Para iniciar a reserva |
+| HU-06 | Cliente | Como Cliente | Quero aplicar um cupom | Para obter desconto |
+| HU-07 | Sistema | Como Sistema | Quero validar se o cupom existe | Para evitar códigos falsos |
+| HU-08 | Gestor | Como Gestor | Quero validar o valor mínimo do cupom | Para proteger a margem |
+| HU-09 | Gestor | Como Gestor | Quero impedir valor final negativo | Para evitar prejuízos |
+| HU-10 | Sistema | Como Sistema | Quero calcular o valor pago automaticamente | Para garantir precisão |
+| HU-11 | Cliente | Como Cliente | Quero realizar a reserva vinculando CPF ao evento | Para garantir a entrada |
+| HU-12 | Sistema | Como Sistema | Quero bloquear reservas acima da capacidade | Para impedir overbooking |
+| HU-13 | Gestor | Como Gestor | Quero impedir compra múltipla por CPF | Para bloquear cambistas |
+| HU-14 | Sistema | Como Sistema | Quero permitir reservas sem cupom | Para não travar vendas comuns |
+| HU-15 | Auditor | Como Auditor | Quero ID único autoincrementado | Para rastrear cada venda |
+| HU-16 | TI | Como TI | Quero usar Dapper com @ | Para proteger contra SQL Injection |
+| HU-17 | TI | Como TI | Quero usar Chaves Estrangeiras (FK) | Para manter a integridade dos dados |
+| HU-18 | Dev | Como Dev | Quero usar Minimal API | Para ter um backend performático |
+| HU-19 | Dev | Como Dev | Quero criar script .sql manual | Para controle total do banco |
+| HU-20 | Professor | Como Professor | Quero entrega via Git | Para auditar o histórico de commits |
+| HU-21 | Sistema | Como Sistema | Quero respeitar o Case Sensitivity | Para passar na análise estática |
+| HU-22 | Auditor | Como Auditor | Quero documentos na /docs | Para validar a engenharia |
+| HU-23 | Auditor | Como Auditor | Quero scripts na /db | Para verificar o banco |
+| HU-24 | Auditor | Como Auditor | Quero código na /src | Para analisar a implementação |
+| HU-25 | Auditor | Como Auditor | Quero testes na /tests | Para validar a confiabilidade |
+| HU-26 | Dev | Como Dev | Quero evitar Entity Framework | Para cumprir a restrição técnica |
+| HU-27 | Dev | Como Dev | Quero evitar bancos em memória | Para garantir persistência real |
+| HU-28 | Dev | Como Dev | Quero um README executável | Para rodar o projeto sem fricção |
+| HU-29 | Dev | Como Dev | Quero usar xUnit | Para validar regras de negócio implacáveis |
+| HU-30 | Sistema | Como Sistema | Quero impedir datas passadas | Para evitar erros operacionais |
+| HU-31 | Financ. | Como Financ. | Quero gravar o valor final pago | Para auditoria contábil |
+| HU-32 | Sistema | Como Sistema | Quero validar o formato do e-mail | Para manter dados de contato úteis |
+| HU-33 | Eng. | Como Eng. | Quero entregar sem arquivos ZIP | Para não receber nota zero |
+| HU-34 | Sistema | Como Sistema | Quero CPF com 11 caracteres | Para padronizar identificação |
+| HU-35 | Admin | Como Admin | Quero ver a porcentagem do cupom | Para gerenciar campanhas |
+| HU-36 | Dev | Como Dev | Quero rodar dotnet run | Para iniciar a API localmente |
 ## 🧩 DoD Consolidado de Execução
 
 Baseado em todos os critérios deste documento, o item só é considerado "Done" quando implementação, validação BDD, testes e evidência estiverem concluídos.

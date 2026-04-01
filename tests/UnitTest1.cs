@@ -2,18 +2,20 @@ using Xunit;
 
 namespace TicketPrimeTests;
 
-public class ValidacaoSistemaTests
+public class CalculoCupomTests
 {
-    [cite_start][Fact] // 
-    public void Teste_ValidacaoCpf_DeveTerOnzeDigitos()
+    [Fact]
+    public void ValidarCalculoMatematico_Desconto_DeveRetornarValorCorreto()
     {
-        // Arranjo (Ator: Sistema)
-        string cpfValido = "12345678901";
+        // Arrange (Preparação)
+        decimal precoPadrao = 100.00m;
+        decimal porcentagemDesconto = 20.00m; // 20%
+        decimal valorEsperado = 80.00m;
 
-        // Ação
-        int contagem = cpfValido.Length;
+        // Act (Ação - simulando a lógica do ID 10)
+        decimal valorCalculado = precoPadrao - (precoPadrao * (porcentagemDesconto / 100));
 
-        [cite_start]// Asserção (O Oráculo - Item 10 da AV1) 
-        Assert.Equal(11, contagem); 
+        // Assert (O "Oráculo" - validando a verdade)
+        Assert.Equal(valorEsperado, valorCalculado);
     }
 }

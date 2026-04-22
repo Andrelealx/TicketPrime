@@ -1,142 +1,144 @@
-# TicketPrime — Engine de Ingressos
-Alunos: João Lucas Barbosa da Silva(06008695)/ Pedro Neves Pinto Capozi(06010613)/ André Lucas Peterson Leal(0610663)/ Miguel Soares dos Santos(06009538)/ Vinicius Rangel(06010696)
-
-> Disciplina: Engenharia de Software | Prof. Dr. André Campos
+# TicketPrime - Engine de Ingressos
 
 Sistema de bilheteria desenvolvido com **C# Minimal API**, **Blazor WebAssembly**, **Dapper** e **SQL Server**.
 
----
+## Stack
 
-## Pré-requisitos
+- .NET 10
+- SQL Server
+- Dapper
+- Blazor WebAssembly
+- xUnit
 
+## Pre-requisitos
+
+- Git
 - [.NET 10 SDK](https://dotnet.microsoft.com/download)
-- SQL Server (Express ou superior) instalado localmente
-- SQL Server Management Studio (SSMS) ou Azure Data Studio (opcional)
+- SQL Server acessivel em `localhost,1433`
+- `sqlcmd` (opcional, mas recomendado para setup rapido do banco)
+- Docker Desktop (opcional, recomendado se voce nao tiver SQL Server local)
 
----
+## Setup de Maquina Zero (Passo a Passo)
 
-## 1. Configurar o Banco de Dados
-
-Abra o SSMS e execute o script abaixo (ou rode via terminal):
-
-```sql
--- Execute o arquivo: db/script.sql
-```
+### 1. Clonar e atualizar
 
 ```powershell
-# Via terminal (sqlcmd)
-sqlcmd -S localhost\SQLEXPRESS -i db\script.sql
+git clone https://github.com/Andrelealx/TicketPrime.git
+cd TicketPrime
+git pull
 ```
 
-O script cria o banco `TicketPrime` com as tabelas:
-- `Usuarios` (CPF, Nome, Email)
-- `Eventos` (Id, Nome, CapacidadeTotal, DataEvento, PrecoPadrao)
-- `Cupons` (Codigo, PorcentagemDesconto, ValorMinimoRegra)
-- `Reservas` (Id, UsuarioCpf, EventoId, CupomUtilizado, ValorFinalPago, DataReserva)
-
----
-
-## 2. Executar a API (Backend)
+### 2. Restaurar dependencias
 
 ```powershell
-# Terminal 1 — entre na pasta da API
-cd Ticketprime-master
-cd src
-cd TicketPrimeApi
-
-# Execute a aplicação
-dotnet run
+dotnet restore src/TicketPrimeApi/TicketPrimeApi.csproj
+dotnet restore src/TicketPrimeFront/TicketPrimeFront.csproj
+dotnet restore tests/TicketPrimeTests.csproj
 ```
 
-A API estará disponível em: `http://localhost:5246`
+### 3. Subir SQL Server (se necessario)
 
-### Endpoints disponíveis
+Opcao recomendada para ambiente novo:
 
-| Método | Rota | Descrição |
+```powershell
+docker run --name ticketprime-sql `
+  -e "ACCEPT_EULA=Y" `
+  -e "MSSQL_SA_PASSWORD=TicketPrime@2024" `
+  -p 1433:1433 `
+  -d mcr.microsoft.com/mssql/server:2022-latest
+```
+
+Se voce ja tiver SQL Server local, garanta que ele esteja acessivel em `localhost,1433`.
+
+### 4. Criar banco e tabelas
+
+```powershell
+sqlcmd -S localhost,1433 -U sa -P "TicketPrime@2024" -i db/script.sql
+```
+
+Se voce nao tiver `sqlcmd`, abra o arquivo `db/script.sql` no SSMS/Azure Data Studio e execute manualmente.
+
+O script `db/script.sql` e idempotente, entao pode ser executado mais de uma vez sem quebrar.
+
+### 5. Configurar string de conexao (se precisar)
+
+Padrao atual do backend em `src/TicketPrimeApi/appsettings.Development.json`:
+
+```json
+"ConnectionStrings": {
+  "TicketPrime": "Server=localhost,1433;Database=TicketPrime;User Id=sa;Password=TicketPrime@2024;TrustServerCertificate=True;"
+}
+```
+
+Se quiser sobrescrever sem editar arquivo:
+
+```powershell
+$env:ConnectionStrings__TicketPrime = "Server=localhost,1433;Database=TicketPrime;User Id=sa;Password=SuaSenhaAqui;TrustServerCertificate=True;"
+```
+
+### 6. Rodar API
+
+```powershell
+dotnet run --project src/TicketPrimeApi/TicketPrimeApi.csproj
+```
+
+API: `http://localhost:5246`
+
+### 7. Rodar Front-end
+
+```powershell
+dotnet run --project src/TicketPrimeFront/TicketPrimeFront.csproj --urls http://localhost:5139
+```
+
+Front-end: `http://localhost:5139`
+
+Base URL da API no front:
+
+- Arquivo: `src/TicketPrimeFront/wwwroot/appsettings.json`
+- Chave: `ApiBaseUrl`
+
+### 8. Rodar testes
+
+```powershell
+dotnet test tests/TicketPrimeTests.csproj
+```
+
+## Endpoints da API
+
+| Metodo | Rota | Descricao |
 |--------|------|-----------|
-| POST | `/api/usuarios` | Cadastrar usuário |
+| POST | `/api/usuarios` | Cadastrar usuario |
 | POST | `/api/eventos` | Cadastrar evento |
-| GET | `/api/eventos` | Listar todos os eventos |
+| GET | `/api/eventos` | Listar eventos |
 | GET | `/api/eventos/{id}` | Buscar evento por ID |
 | POST | `/api/cupons` | Cadastrar cupom |
-| GET | `/api/cupons/{codigo}` | Buscar cupom por código |
+| GET | `/api/cupons/{codigo}` | Buscar cupom por codigo |
 | POST | `/api/reservas` | Realizar reserva |
-| GET | `/api/reservas/{cpf}` | Consultar reservas por CPF (com JOIN) |
+| GET | `/api/reservas/{cpf}` | Consultar reservas por CPF |
 
----
+## Estrutura do Projeto
 
-## 3. Executar o Front-end (Blazor)
-
-```powershell
-# Terminal 2 — entre na pasta do front
-cd TicketPrime-master
-cd src
-cd TicketPrimefront
-
-# Execute a aplicação
-dotnet run
-```
-
-O front-end abrirá automaticamente no navegador. Caso não abra, acesse: `http://localhost:5139`
-
-> **Importante:** A API deve estar rodando (passo 2) para o front-end funcionar corretamente.
-
----
-
-## 4. Executar os Testes
-
-```powershell
-# Entre na pasta de testes
-cd TicketPrime-master
-cd tests
-
-# Execute os testes
-dotnet test
-```
-
-Os testes cobrem:
-- Cálculo matemático do desconto (R4)
-- Regra de valor mínimo do cupom (R4)
-- Lógica de overbooking (R3)
-- Limite de reservas por CPF (R2)
-- Validação de CPF (11 dígitos)
-- Validação de formato de e-mail
-- Validação de porcentagem do cupom
-
----
-
-## 5. Estrutura de Pastas
-
-```
+```text
 TicketPrime/
-├── db/
-│   └── script.sql          # Script CREATE TABLE de todas as entidades
-├── docs/
-│   └── requisitos.md       # Histórias de usuário e critérios BDD
-├── src/
-│   ├── TicketPrimeApi/     # Minimal API C# com Dapper
-│   └── TicketPrimeFront/   # Blazor WebAssembly
-├── tests/
-│   ├── UnitTest1.cs        # Testes xUnit (Fact e Theory)
-│   └── TicketPrimeTests.csproj
-└── README.md
+|-- db/
+|   `-- script.sql
+|-- docs/
+|   `-- requisitos.md
+|-- src/
+|   |-- TicketPrimeApi/
+|   `-- TicketPrimeFront/
+|-- tests/
+|   `-- TicketPrimeTests.csproj
+`-- README.md
 ```
 
----
+## Solucao de Problemas Rapida
 
-## 6. Regras de Negócio
-
-| Regra | Descrição |
-|-------|-----------|
-| **R1 — Integridade** | `POST /api/reservas` valida existência de `UsuarioCpf` e `EventoId` antes do INSERT |
-| **R2 — Limite por CPF** | Máximo 2 reservas por CPF no mesmo evento (bloqueia a 3ª tentativa) |
-| **R3 — Estoque** | Bloqueia reservas quando total >= `CapacidadeTotal` do evento |
-| **R4 — Motor de Cupons** | Desconto aplicado somente se `PrecoPadrao >= ValorMinimoRegra` do cupom |
-
----
-
-## 7. Segurança
-
-- Todas as queries usam **parâmetros Dapper** (`@NomeParam`) — zero SQL Injection
-- Conexão via **Windows Authentication** (`Trusted_Connection=True`) — sem senha em texto plano
-- **Entity Framework** não utilizado — apenas Dapper com SQL manual
+- Erro de conexao no backend:
+  - Verifique se o SQL Server esta ativo em `localhost,1433`
+  - Confirme usuario/senha e a `ConnectionStrings:TicketPrime`
+- Front nao carrega dados:
+  - Garanta API rodando em `http://localhost:5246`
+  - Confira `ApiBaseUrl` em `src/TicketPrimeFront/wwwroot/appsettings.json`
+- Porta em uso:
+  - Troque com `--urls` no `dotnet run` e ajuste configuracoes correspondentes

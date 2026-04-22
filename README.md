@@ -1,4 +1,5 @@
 # TicketPrime — Engine de Ingressos
+Alunos: João Lucas Barbosa da Silva(06008695)/ Pedro Neves Pinto Capozi(06010613)/ André Lucas Peterson Leal(0610663)/ Miguel Soares()/ Vinicius Rangel(06010696)
 
 > Disciplina: Engenharia de Software | Prof. Dr. André Campos
 

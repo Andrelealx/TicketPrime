@@ -18,6 +18,7 @@ const FRONT_PROJECT = "src/TicketPrimeFront/TicketPrimeFront.csproj";
 const TEST_PROJECT = "tests/TicketPrimeTests.csproj";
 const API_URL = "http://localhost:5246";
 const FRONT_URL = "http://localhost:5139";
+let dockerCommand = "docker";
 
 function log(message) {
   console.log(`[dev] ${message}`);
@@ -35,6 +36,7 @@ function run(command, commandArgs, options = {}) {
   } = options;
 
   return new Promise((resolvePromise, rejectPromise) => {
+    let settled = false;
     const child = spawn(command, commandArgs, {
       cwd,
       shell: false,
@@ -57,10 +59,29 @@ function run(command, commandArgs, options = {}) {
     }
 
     child.on("error", (error) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+
+      if (ignoreError) {
+        resolvePromise({
+          code: 127,
+          stdout,
+          stderr: `${stderr}\n${error.message}`.trim()
+        });
+        return;
+      }
+
       rejectPromise(error);
     });
 
     child.on("close", (code) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+
       const result = { code, stdout, stderr };
       if (code === 0 || ignoreError) {
         resolvePromise(result);
@@ -75,20 +96,53 @@ function run(command, commandArgs, options = {}) {
   });
 }
 
-async function ensureDockerAvailable() {
-  const result = await run("docker", ["--version"], { ignoreError: true });
-  if (result.code !== 0) {
-    throw new Error(
-      "Docker nao encontrado. Instale/inicie o Docker Desktop ou rode com --skip-db."
+async function resolveDockerCommand() {
+  const candidates = ["docker"];
+
+  if (process.platform === "win32") {
+    const programFiles = process.env.ProgramFiles || "C:\\Program Files";
+    const programFilesX86 = process.env["ProgramFiles(x86)"] || "C:\\Program Files (x86)";
+    candidates.push(
+      resolve(programFiles, "Docker/Docker/resources/bin/docker.exe"),
+      resolve(programFiles, "Docker/Docker/resources/docker.exe"),
+      resolve(programFilesX86, "Docker/Docker/resources/bin/docker.exe")
     );
+  } else {
+    candidates.push("/usr/local/bin/docker", "/usr/bin/docker");
   }
+
+  for (const candidate of candidates) {
+    const shouldExistCheck = candidate !== "docker";
+    if (shouldExistCheck && !existsSync(candidate)) {
+      continue;
+    }
+
+    const result = await run(candidate, ["--version"], { ignoreError: true });
+    if (result.code === 0) {
+      dockerCommand = candidate;
+      return;
+    }
+  }
+
+  throw new Error(
+    "Docker CLI nao encontrado. Rode 'npm run setup' no Windows ou instale Docker Desktop e abra um novo terminal."
+  );
+}
+
+async function runDocker(args, options = {}) {
+  return run(dockerCommand, args, options);
+}
+
+async function ensureDockerAvailable() {
+  await resolveDockerCommand();
+  log(`Docker CLI detectado em: ${dockerCommand}`);
 }
 
 async function ensureSqlContainer() {
   await ensureDockerAvailable();
   log("Verificando container SQL...");
 
-  const existing = await run("docker", [
+  const existing = await runDocker([
     "ps",
     "-a",
     "--filter",
@@ -99,7 +153,7 @@ async function ensureSqlContainer() {
 
   if (existing.stdout.trim() !== SQL_CONTAINER) {
     log("Criando container SQL Server...");
-    await run("docker", [
+    await runDocker([
       "run",
       "--name",
       SQL_CONTAINER,
@@ -114,14 +168,14 @@ async function ensureSqlContainer() {
     ], { inherit: true });
   } else {
     log("Iniciando container SQL existente...");
-    await run("docker", ["start", SQL_CONTAINER], { inherit: true, ignoreError: true });
+    await runDocker(["start", SQL_CONTAINER], { inherit: true, ignoreError: true });
   }
 }
 
 async function waitForSqlReady() {
   log("Aguardando SQL Server ficar pronto...");
   for (let i = 0; i < 60; i += 1) {
-    const result = await run("docker", [
+    const result = await runDocker([
       "exec",
       SQL_CONTAINER,
       "/opt/mssql-tools18/bin/sqlcmd",
@@ -153,8 +207,8 @@ async function applyDatabaseScript() {
   }
 
   log("Aplicando db/script.sql...");
-  await run("docker", ["cp", DB_SCRIPT, `${SQL_CONTAINER}:/tmp/script.sql`], { inherit: true });
-  await run("docker", [
+  await runDocker(["cp", DB_SCRIPT, `${SQL_CONTAINER}:/tmp/script.sql`], { inherit: true });
+  await runDocker([
     "exec",
     SQL_CONTAINER,
     "/opt/mssql-tools18/bin/sqlcmd",

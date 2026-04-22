@@ -4,6 +4,8 @@
   "version": "1.0.0",
   "description": "Orquestracao local do TicketPrime",
   "scripts": {
+    "postinstall": "node scripts/postinstall.mjs",
+    "setup": "powershell -ExecutionPolicy Bypass -File ./setup-local.ps1 -AutoInstall -SkipRun",
     "setup:win": "powershell -ExecutionPolicy Bypass -File ./setup-local.ps1",
     "dev": "node scripts/dev-all.mjs",
     "dev:apps": "node scripts/dev-all.mjs --skip-db",

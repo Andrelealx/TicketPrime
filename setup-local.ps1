@@ -1,6 +1,7 @@
 param(
     [switch]$AutoInstall,
-    [switch]$SkipRun
+    [switch]$SkipRun,
+    [switch]$SkipNpmInstall
 )
 
 $ErrorActionPreference = "Stop"
@@ -134,8 +135,10 @@ Ensure-Requirement -ToolName "docker" -Label "Docker Desktop" -WingetId "Docker.
 
 Ensure-DockerRunning
 
-Write-Step "Executando npm install..."
-npm install
+if (-not $SkipNpmInstall) {
+    Write-Step "Executando npm install..."
+    npm install
+}
 
 if ($SkipRun) {
     Write-Step "Setup concluido. Para subir tudo rode: npm run dev"

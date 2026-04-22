@@ -19,14 +19,26 @@ Sistema de bilheteria desenvolvido com **C# Minimal API**, **Blazor WebAssembly*
 - `sqlcmd` (opcional, mas recomendado para setup rapido do banco)
 - Docker Desktop (opcional, recomendado se voce nao tiver SQL Server local)
 
-## Rodar Tudo Com Um Comando (Recomendado)
+## Rodar Em PC Limpo (Fluxo Principal)
+
+Para quem nunca rodou nada na maquina (Windows), use somente:
 
 ```powershell
+git clone https://github.com/Andrelealx/TicketPrime.git
+cd TicketPrime
 npm install
 npm run dev
 ```
 
-O `npm run dev` faz automaticamente:
+O `npm install` (Windows) faz setup automatico de dependencias com `winget` se faltar:
+
+- Git
+- Node.js/npm
+- .NET SDK 10+
+- Docker Desktop
+- Inicializacao do Docker Desktop
+
+Depois, o `npm run dev` faz automaticamente:
 
 - Sobe (ou cria) o container `ticketprime-sql` no Docker
 - Aguarda SQL Server ficar pronto
@@ -34,13 +46,18 @@ O `npm run dev` faz automaticamente:
 - Restaura os projetos .NET
 - Inicia API (`http://localhost:5246`) e Front (`http://localhost:5139`)
 
+Importante:
+
+- No primeiro `npm install`, algumas instalacoes podem abrir prompt do Windows/winget.
+- Se pedir para reabrir terminal apos instalacao, abra novamente e rode `npm install` e depois `npm run dev`.
+
 Se voce ja tiver banco pronto e quiser subir so API + Front:
 
 ```powershell
 npm run dev:apps
 ```
 
-## Windows Totalmente Limpo (Quase Sem Nada Instalado)
+## Windows Totalmente Limpo (Opcional Manual)
 
 Se a pessoa estiver em Windows e quiser setup guiado (instala dependencias via `winget`), rode:
 
@@ -153,6 +170,7 @@ npm run dev       # sobe tudo (db + restore + api + front)
 npm run dev:apps  # sobe somente api + front
 npm run restore   # restore dos 3 projetos .NET
 npm run test      # roda testes
+npm run setup     # instala dependencias no Windows
 npm run setup:win # setup guiado para Windows
 ```
 

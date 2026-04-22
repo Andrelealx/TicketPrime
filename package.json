@@ -1,0 +1,12 @@
+{
+  "name": "ticketprime",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Orquestracao local do TicketPrime",
+  "scripts": {
+    "dev": "node scripts/dev-all.mjs",
+    "dev:apps": "node scripts/dev-all.mjs --skip-db",
+    "test": "dotnet test tests/TicketPrimeTests.csproj",
+    "restore": "dotnet restore src/TicketPrimeApi/TicketPrimeApi.csproj && dotnet restore src/TicketPrimeFront/TicketPrimeFront.csproj && dotnet restore tests/TicketPrimeTests.csproj"
+  }
+}

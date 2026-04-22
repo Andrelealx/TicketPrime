@@ -14,9 +14,31 @@ Sistema de bilheteria desenvolvido com **C# Minimal API**, **Blazor WebAssembly*
 
 - Git
 - [.NET 10 SDK](https://dotnet.microsoft.com/download)
+- Node.js 20+ (para `npm run`)
 - SQL Server acessivel em `localhost,1433`
 - `sqlcmd` (opcional, mas recomendado para setup rapido do banco)
 - Docker Desktop (opcional, recomendado se voce nao tiver SQL Server local)
+
+## Rodar Tudo Com Um Comando (Recomendado)
+
+```powershell
+npm install
+npm run dev
+```
+
+O `npm run dev` faz automaticamente:
+
+- Sobe (ou cria) o container `ticketprime-sql` no Docker
+- Aguarda SQL Server ficar pronto
+- Executa `db/script.sql`
+- Restaura os projetos .NET
+- Inicia API (`http://localhost:5246`) e Front (`http://localhost:5139`)
+
+Se voce ja tiver banco pronto e quiser subir so API + Front:
+
+```powershell
+npm run dev:apps
+```
 
 ## Setup de Maquina Zero (Passo a Passo)
 
@@ -101,6 +123,15 @@ Base URL da API no front:
 
 ```powershell
 dotnet test tests/TicketPrimeTests.csproj
+```
+
+### Scripts NPM disponiveis
+
+```powershell
+npm run dev       # sobe tudo (db + restore + api + front)
+npm run dev:apps  # sobe somente api + front
+npm run restore   # restore dos 3 projetos .NET
+npm run test      # roda testes
 ```
 
 ## Endpoints da API

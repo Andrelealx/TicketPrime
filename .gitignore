@@ -19,6 +19,9 @@ packages/
 *.nupkg
 .nuget/
 
+## Node
+node_modules/
+
 ## Logs & temp
 *.log
 *.tmp

@@ -1,5 +1,8 @@
 # TicketPrime - Engine de Ingressos
 
+ 
+ Alunos: João Lucas Barbosa da Silva(06008695)/ Pedro Neves Pinto Capozi(06010613)/ André Lucas Peterson Leal(0610663)/ Miguel Soares dos Santos(06009538)/ Vinicius Rangel(06010696)
+
 Sistema de bilheteria desenvolvido com **C# Minimal API**, **Blazor WebAssembly**, **Dapper** e **SQL Server**.
 
 ## Stack

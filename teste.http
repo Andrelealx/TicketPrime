@@ -1,0 +1,45 @@
+### Aeroportos — Listar todos
+GET http://localhost:5246/api/aeroportos
+
+### Aeroportos — Autocomplete (busca por nome, cidade ou IATA)
+GET http://localhost:5246/api/aeroportos/busca?q=GRU
+
+### Companhias Aereas — Listar todas ativas
+GET http://localhost:5246/api/companhias
+
+### Rotas Populares — Listar
+GET http://localhost:5246/api/rotas/populares
+
+### Voos — Buscar passagens GRU → REC
+GET http://localhost:5246/api/voos/busca?origem=GRU&destino=REC&dataPartida=2026-07-15
+
+### Voos — Buscar com validacao (origem invalida → 400)
+GET http://localhost:5246/api/voos/busca?origem=GR&destino=REC&dataPartida=2026-07-15
+
+### Voos — Historico de precos (substitua {vooId} por um ID real)
+GET http://localhost:5246/api/voos/precos/1
+
+### Alertas — Criar alerta de preco
+POST http://localhost:5246/api/alertas
+Content-Type: application/json
+
+{
+    "Email": "usuario@email.com",
+    "Origem": "GRU",
+    "Destino": "REC",
+    "PrecoAlvo": 500.00
+}
+
+### Alertas — Listar alertas por email
+GET http://localhost:5246/api/alertas/usuario@email.com
+
+### Alertas — Email invalido → 400
+POST http://localhost:5246/api/alertas
+Content-Type: application/json
+
+{
+    "Email": "invalido",
+    "Origem": "GRU",
+    "Destino": "REC",
+    "PrecoAlvo": 500
+}

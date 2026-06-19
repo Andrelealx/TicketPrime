@@ -1,0 +1,307 @@
+@page "/flycompare"
+@inject HttpClient Http
+@inject NavigationManager Nav
+
+<PageTitle>FlyCompare — Buscar Passagens</PageTitle>
+
+<div class="fc-hero">
+    <div class="fc-hero-badge">✈️ Metabuscador de Passagens</div>
+    <h1 class="fc-hero-title">FlyCompare</h1>
+    <p class="fc-hero-sub">Compare preços de passagens aéreas em tempo real</p>
+</div>
+
+<div class="fc-search-card">
+    <div class="fc-search-form">
+        <div class="fc-field">
+            <label class="fc-label">Origem</label>
+            <div class="fc-autocomplete">
+                <input class="fc-input"
+                       placeholder="Cidade ou aeroporto..."
+                       value="@origemTexto"
+                       @oninput="OnOrigemInput"
+                       @onfocus="() => origemFocus = true"
+                       @onblur="OnOrigemBlur"
+                       autocomplete="off" />
+                @if (origemSuggestions.Count > 0 && origemFocus)
+                {
+                    <div class="fc-suggestions">
+                        @foreach (var a in origemSuggestions)
+                        {
+                            <div class="fc-suggestion-item"
+                                 @onmousedown="() => SelectOrigem(a)">
+                                <span class="fc-suggestion-code">@a.CodigoIATA</span>
+                                <span class="fc-suggestion-city">@a.Cidade</span>
+                                <span class="fc-suggestion-name">@a.Nome</span>
+                                <span class="fc-suggestion-state">@a.Estado</span>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="fc-swap-btn" @onclick="SwapOrigemDestino" title="Inverter">
+            <span>⇄</span>
+        </div>
+
+        <div class="fc-field">
+            <label class="fc-label">Destino</label>
+            <div class="fc-autocomplete">
+                <input class="fc-input"
+                       placeholder="Cidade ou aeroporto..."
+                       value="@destinoTexto"
+                       @oninput="OnDestinoInput"
+                       @onfocus="() => destinoFocus = true"
+                       @onblur="OnDestinoBlur"
+                       autocomplete="off" />
+                @if (destinoSuggestions.Count > 0 && destinoFocus)
+                {
+                    <div class="fc-suggestions">
+                        @foreach (var a in destinoSuggestions)
+                        {
+                            <div class="fc-suggestion-item"
+                                 @onmousedown="() => SelectDestino(a)">
+                                <span class="fc-suggestion-code">@a.CodigoIATA</span>
+                                <span class="fc-suggestion-city">@a.Cidade</span>
+                                <span class="fc-suggestion-name">@a.Nome</span>
+                                <span class="fc-suggestion-state">@a.Estado</span>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="fc-field" style="max-width:200px;">
+            <label class="fc-label">Data de Ida</label>
+            <input class="fc-input" type="date"
+                   value="@dataPartida"
+                   @onchange="(e) => dataPartida = e.Value?.ToString() ?? string.Empty"
+                   min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+        </div>
+
+        <div class="fc-field" style="max-width:140px;">
+            <label class="fc-label">Passageiros</label>
+            <select class="fc-input" @bind="passageiros">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+            </select>
+        </div>
+
+        <div class="fc-search-action">
+            <button class="fc-btn fc-btn-primary" @onclick="ExecutarBusca" disabled="@carregando">
+                @if (carregando)
+                {
+                    <span class="fc-btn-spinner"></span>
+                    <span>Buscando...</span>
+                }
+                else
+                {
+                    <span>🔍 Buscar Passagens</span>
+                }
+            </button>
+        </div>
+    </div>
+
+    <Alerta Mensagem="@mensagem" Tipo="@tipoMensagem" />
+</div>
+
+@* Rotas populares - atalhos *@
+<div class="fc-section">
+    <div class="fc-section-title">✈️ Rotas Populares</div>
+    <div class="fc-rotas-grid">
+        @foreach (var rota in rotasPopulares)
+        {
+            <button class="fc-rota-btn" @onclick="() => BuscarRota(rota)" title="@rota.OrigemCidade → @rota.DestinoCidade">
+                <span class="fc-rota-code">@rota.OrigemCodigo → @rota.DestinoCodigo</span>
+                <span class="fc-rota-cidade">@rota.OrigemCidade → @rota.DestinoCidade</span>
+            </button>
+        }
+    </div>
+</div>
+
+@code {
+    private string origemTexto = string.Empty;
+    private string destinoTexto = string.Empty;
+    private string origemCodigo = string.Empty;
+    private string destinoCodigo = string.Empty;
+    private string dataPartida = DateTime.Today.AddDays(30).ToString("yyyy-MM-dd");
+    private int passageiros = 1;
+    private string mensagem = string.Empty;
+    private string tipoMensagem = "erro";
+    private bool carregando = false;
+
+    private List<Aeroporto> origemSuggestions = new();
+    private List<Aeroporto> destinoSuggestions = new();
+    private bool origemFocus = false;
+    private bool destinoFocus = false;
+    private CancellationTokenSource? origemCts;
+    private CancellationTokenSource? destinoCts;
+    private List<RotaFront> rotasPopulares = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarRotasPopulares();
+    }
+
+    private async Task CarregarRotasPopulares()
+    {
+        try
+        {
+            var resp = await Http.GetAsync("/api/rotas/populares");
+            if (resp.IsSuccessStatusCode)
+            {
+                rotasPopulares = await resp.Content.ReadFromJsonAsync<List<RotaFront>>() ?? new();
+            }
+        }
+        catch { /* Silently ignore - rotas populares e melhoria visual */ }
+    }
+
+    private async Task OnOrigemInput(ChangeEventArgs e)
+    {
+        origemTexto = e.Value?.ToString() ?? string.Empty;
+        origemFocus = true;
+        origemCts?.Cancel();
+        origemCts = new CancellationTokenSource();
+        var token = origemCts.Token;
+        await Task.Delay(300, token); // debounce 300ms
+        if (!token.IsCancellationRequested)
+            await BuscarSugestoes(origemTexto, true);
+    }
+
+    private async Task OnDestinoInput(ChangeEventArgs e)
+    {
+        destinoTexto = e.Value?.ToString() ?? string.Empty;
+        destinoFocus = true;
+        destinoCts?.Cancel();
+        destinoCts = new CancellationTokenSource();
+        var token = destinoCts.Token;
+        await Task.Delay(300, token);
+        if (!token.IsCancellationRequested)
+            await BuscarSugestoes(destinoTexto, false);
+    }
+
+    private async Task BuscarSugestoes(string q, bool isOrigem)
+    {
+        if (string.IsNullOrWhiteSpace(q) || q.Length < 2)
+        {
+            if (isOrigem) origemSuggestions.Clear();
+            else destinoSuggestions.Clear();
+            return;
+        }
+
+        try
+        {
+            var resp = await Http.GetAsync($"/api/aeroportos/busca?q={Uri.EscapeDataString(q)}");
+            if (resp.IsSuccessStatusCode)
+            {
+                var result = await resp.Content.ReadFromJsonAsync<List<Aeroporto>>() ?? new();
+                if (isOrigem)
+                    origemSuggestions = result;
+                else
+                    destinoSuggestions = result;
+            }
+        }
+        catch { /* Ignore */ }
+    }
+
+    private void SelectOrigem(Aeroporto a)
+    {
+        origemTexto = $"{a.Cidade} ({a.CodigoIATA})";
+        origemCodigo = a.CodigoIATA;
+        origemSuggestions.Clear();
+        origemFocus = false;
+    }
+
+    private void SelectDestino(Aeroporto a)
+    {
+        destinoTexto = $"{a.Cidade} ({a.CodigoIATA})";
+        destinoCodigo = a.CodigoIATA;
+        destinoSuggestions.Clear();
+        destinoFocus = false;
+    }
+
+    private void OnOrigemBlur(FocusEventArgs e)
+    {
+        // Delay to allow mousedown on suggestion to fire first
+        _ = Task.Delay(200).ContinueWith(_ => {
+            origemFocus = false;
+            try { InvokeAsync(StateHasChanged); } catch { /* Component may be disposed */ }
+        });
+    }
+
+    private void OnDestinoBlur(FocusEventArgs e)
+    {
+        _ = Task.Delay(200).ContinueWith(_ => {
+            destinoFocus = false;
+            try { InvokeAsync(StateHasChanged); } catch { /* Component may be disposed */ }
+        });
+    }
+
+    private void SwapOrigemDestino()
+    {
+        (origemTexto, destinoTexto) = (destinoTexto, origemTexto);
+        (origemCodigo, destinoCodigo) = (destinoCodigo, origemCodigo);
+    }
+
+    /// <summary>
+    /// Valida os campos e navega para a pagina de resultados.
+    /// LOW-04: Mostra loading state antes de navegar em vez de navegar imediatamente.
+    /// </summary>
+    private async Task ExecutarBusca()
+    {
+        mensagem = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(origemCodigo) || origemCodigo.Length != 3)
+        {
+            mensagem = "Selecione um aeroporto de origem valido.";
+            tipoMensagem = "erro";
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(destinoCodigo) || destinoCodigo.Length != 3)
+        {
+            mensagem = "Selecione um aeroporto de destino valido.";
+            tipoMensagem = "erro";
+            return;
+        }
+        if (origemCodigo == destinoCodigo)
+        {
+            mensagem = "Origem e destino nao podem ser iguais.";
+            tipoMensagem = "erro";
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(dataPartida))
+        {
+            mensagem = "Informe a data de partida.";
+            tipoMensagem = "erro";
+            return;
+        }
+
+        // LOW-04: Mostra loading por um breve momento antes de navegar
+        carregando = true;
+        StateHasChanged();
+        await Task.Delay(150); // Pequeno delay para o usuario ver o feedback
+        Nav.NavigateTo($"/flycompare/resultados/{origemCodigo}/{destinoCodigo}/{dataPartida}");
+    }
+
+    private void BuscarRota(RotaFront rota)
+    {
+        origemTexto = $"{rota.OrigemCidade} ({rota.OrigemCodigo})";
+        origemCodigo = rota.OrigemCodigo;
+        destinoTexto = $"{rota.DestinoCidade} ({rota.DestinoCodigo})";
+        destinoCodigo = rota.DestinoCodigo;
+    }
+
+    // Frontend-only model for rotas
+    private class RotaFront
+    {
+        public int Id { get; set; }
+        public string OrigemCodigo { get; set; } = string.Empty;
+        public string DestinoCodigo { get; set; } = string.Empty;
+        public string OrigemCidade { get; set; } = string.Empty;
+        public string DestinoCidade { get; set; } = string.Empty;
+    }
+}

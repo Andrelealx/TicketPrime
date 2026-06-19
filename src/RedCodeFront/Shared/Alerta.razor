@@ -1,0 +1,30 @@
+@if (!string.IsNullOrEmpty(Mensagem))
+{
+    var icone = Tipo switch
+    {
+        "sucesso" => "✅",
+        "erro" => "❌",
+        "aviso" => "⚠️",
+        "info" => "ℹ️",
+        _ => "❌"
+    };
+
+    <div class="fc-alert fc-alert-@Tipo">
+        <span class="fc-alert-icon">@icone</span>
+        <span>@Mensagem</span>
+    </div>
+}
+
+@code {
+    /// <summary>
+    /// Mensagem a ser exibida no alerta.
+    /// Se vazia ou nula, o alerta não é renderizado.
+    /// </summary>
+    [Parameter] public string Mensagem { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Tipo do alerta: "sucesso", "erro", "aviso" ou "info".
+    /// Define o ícone e a classe CSS (fc-alert-{tipo}).
+    /// </summary>
+    [Parameter] public string Tipo { get; set; } = "erro";
+}

@@ -1,0 +1,36 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+*.swp
+
+## Build outputs
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+build/
+bld/
+
+## NuGet
+packages/
+*.nupkg
+.nuget/
+
+## Node
+node_modules/
+
+## Logs & temp
+*.log
+*.tmp
+Thumbs.db
+.DS_Store
+
+## Secrets (nunca subir)
+appsettings.Production.json
+secrets.json
+
+## Claude Code (configs locais)
+.claude/

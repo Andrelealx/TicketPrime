@@ -1,0 +1,278 @@
+@page "/alertas"
+@inject HttpClient Http
+
+<PageTitle>FlyCompare — Meus Alertas de Preço</PageTitle>
+
+<div class="fc-hero">
+    <div class="fc-hero-badge">🔔 Alertas de Preço</div>
+    <h1 class="fc-hero-title">Meus Alertas</h1>
+    <p class="fc-hero-sub">Receba notificações quando o preço da passagem atingir seu valor alvo</p>
+</div>
+
+<div class="fc-search-card">
+    <h3 style="margin:0 0 12px 0; color:var(--fc-gold);">✏️ Criar Novo Alerta</h3>
+    <div class="fc-search-form">
+        <div class="fc-field">
+            <label class="fc-label">Seu E-mail</label>
+            <input type="email" class="fc-input" @bind="novoEmail"
+                   placeholder="seu@email.com" />
+        </div>
+        <div class="fc-field" style="max-width:130px;">
+            <label class="fc-label">Origem (IATA)</label>
+            <input type="text" class="fc-input fc-input-iata" @bind="novoOrigem"
+                   placeholder="GRU" maxlength="3"
+                   @oninput="() => novoOrigem = novoOrigem?.ToUpperInvariant() ?? string.Empty" />
+        </div>
+        <div class="fc-field" style="max-width:130px;">
+            <label class="fc-label">Destino (IATA)</label>
+            <input type="text" class="fc-input fc-input-iata" @bind="novoDestino"
+                   placeholder="REC" maxlength="3"
+                   @oninput="() => novoDestino = novoDestino?.ToUpperInvariant() ?? string.Empty" />
+        </div>
+        <div class="fc-field" style="max-width:160px;">
+            <label class="fc-label">Preço Alvo (R$)</label>
+            <input type="number" class="fc-input" @bind="novoPrecoAlvo"
+                   placeholder="499,90" step="0.01" min="0" />
+        </div>
+        <div class="fc-search-action" style="align-self:flex-end;">
+            <button class="fc-btn fc-btn-primary" @onclick="CriarAlerta"
+                    disabled="@criandoAlerta">
+                @if (criandoAlerta)
+                {
+                    <span class="fc-btn-spinner"></span>
+                }
+                else
+                {
+                    <span>🔔 Criar Alerta</span>
+                }
+            </button>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(mensagemSucesso))
+    {
+        <div class="fc-success">@mensagemSucesso</div>
+    }
+    @if (!string.IsNullOrEmpty(mensagemErro))
+    {
+        <div class="fc-error">@mensagemErro</div>
+    }
+</div>
+
+<div class="fc-section" style="margin-top:24px;">
+    <div class="fc-section-title">📋 Consultar Meus Alertas</div>
+    <div class="fc-search-card" style="padding:16px;">
+        <div style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap;">
+            <div class="fc-field" style="flex:1; min-width:250px;">
+                <label class="fc-label">E-mail para consulta</label>
+                <input type="email" class="fc-input" @bind="consultaEmail"
+                       placeholder="Informe seu e-mail" />
+            </div>
+            <button class="fc-btn fc-btn-secondary" @onclick="CarregarAlertas"
+                    disabled="@carregandoAlertas">
+                @if (carregandoAlertas)
+                {
+                    <span class="fc-btn-spinner"></span>
+                }
+                else
+                {
+                    <span>🔍 Buscar</span>
+                }
+            </button>
+        </div>
+    </div>
+
+    @if (alertas is { Count: > 0 })
+    {
+        <div class="fc-results-table-wrapper" style="margin-top:16px;">
+            <table class="fc-results-table">
+                <thead>
+                    <tr>
+                        <th>Rota</th>
+                        <th>Preço Alvo</th>
+                        <th>Status</th>
+                        <th>Criado em</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var a in alertas)
+                    {
+                        <tr>
+                            <td><strong>@a.Origem → @a.Destino</strong></td>
+                            <td>R$ @a.PrecoAlvo.ToString("N2")</td>
+                            <td>
+                                @if (a.Ativo)
+                                {
+                                    <span class="fc-badge fc-badge-ativo">🟢 Ativo</span>
+                                }
+                                else
+                                {
+                                    <span class="fc-badge fc-badge-disparado">🔴 Disparado</span>
+                                }
+                            </td>
+                            <td>@a.DataCriacao.ToString("dd/MM/yyyy")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else if (consultaRealizada)
+    {
+        <p class="fc-empty" style="margin-top:16px;">Nenhum alerta encontrado para este e-mail.</p>
+    }
+</div>
+
+@code {
+    private string? novoEmail;
+    private string novoOrigem = "";
+    private string novoDestino = "";
+    private decimal novoPrecoAlvo;
+    private bool criandoAlerta;
+    private string? mensagemSucesso;
+    private string? mensagemErro;
+
+    private string consultaEmail = "";
+    private bool carregandoAlertas;
+    private bool consultaRealizada;
+    private List<AlertaResponse>? alertas;
+
+    private async Task CriarAlerta()
+    {
+        mensagemSucesso = null;
+        mensagemErro = null;
+
+        // Validacao
+        if (string.IsNullOrWhiteSpace(novoEmail) || !novoEmail.Contains('@'))
+        {
+            mensagemErro = "Informe um e-mail válido.";
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(novoOrigem) || novoOrigem.Length != 3)
+        {
+            mensagemErro = "Código IATA de origem inválido (ex: GRU).";
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(novoDestino) || novoDestino.Length != 3)
+        {
+            mensagemErro = "Código IATA de destino inválido (ex: REC).";
+            return;
+        }
+        if (novoOrigem == novoDestino)
+        {
+            mensagemErro = "Origem e destino não podem ser iguais.";
+            return;
+        }
+        if (novoPrecoAlvo <= 0)
+        {
+            mensagemErro = "Preço alvo deve ser maior que zero.";
+            return;
+        }
+
+        criandoAlerta = true;
+
+        try
+        {
+            var request = new AlertaRequestFront
+            {
+                Email = novoEmail,
+                Origem = novoOrigem.ToUpper(),
+                Destino = novoDestino.ToUpper(),
+                PrecoAlvo = novoPrecoAlvo
+            };
+
+            var resp = await Http.PostAsJsonAsync("/api/alertas", request);
+
+            if (resp.IsSuccessStatusCode)
+            {
+                var emailCriado = novoEmail; // Salva antes de limpar
+                mensagemSucesso = $"✅ Alerta criado com sucesso para {novoOrigem.ToUpper()} → {novoDestino.ToUpper()}!";
+                novoEmail = null;
+                novoOrigem = "";
+                novoDestino = "";
+                novoPrecoAlvo = 0;
+
+                // Recarrega alertas se o e-mail de consulta coincidir
+                if (!string.IsNullOrWhiteSpace(consultaEmail)
+                    && string.Equals(consultaEmail.Trim(), emailCriado?.Trim(), StringComparison.OrdinalIgnoreCase))
+                {
+                    await CarregarAlertas();
+                }
+            }
+            else
+            {
+                var erroBody = await resp.Content.ReadAsStringAsync();
+                mensagemErro = $"Erro: {erroBody}";
+            }
+        }
+        catch (Exception ex)
+        {
+            mensagemErro = $"Erro de conexão: {ex.Message}";
+        }
+        finally
+        {
+            criandoAlerta = false;
+        }
+    }
+
+    private async Task CarregarAlertas()
+    {
+        mensagemSucesso = null;
+        mensagemErro = null;
+
+        if (string.IsNullOrWhiteSpace(consultaEmail) || !consultaEmail.Contains('@'))
+        {
+            mensagemErro = "Informe um e-mail válido para consulta.";
+            return;
+        }
+
+        carregandoAlertas = true;
+        consultaRealizada = false;
+
+        try
+        {
+            var resp = await Http.GetAsync($"/api/alertas/{Uri.EscapeDataString(consultaEmail.Trim())}");
+
+            if (resp.IsSuccessStatusCode)
+            {
+                alertas = await resp.Content.ReadFromJsonAsync<List<AlertaResponse>>() ?? new();
+            }
+            else
+            {
+                alertas = null;
+                mensagemErro = "Erro ao buscar alertas. Verifique o e-mail.";
+            }
+        }
+        catch (Exception ex)
+        {
+            alertas = null;
+            mensagemErro = $"Erro de conexão: {ex.Message}";
+        }
+        finally
+        {
+            carregandoAlertas = false;
+            consultaRealizada = true;
+        }
+    }
+
+    // Modelo de resposta dos alertas (mapeia o retorno da API)
+    private class AlertaResponse
+    {
+        public int Id { get; set; }
+        public string Email { get; set; } = "";
+        public decimal PrecoAlvo { get; set; }
+        public bool Ativo { get; set; }
+        public DateTime DataCriacao { get; set; }
+        public string Origem { get; set; } = "";
+        public string Destino { get; set; } = "";
+    }
+
+    // Modelo de request para criar alerta
+    private class AlertaRequestFront
+    {
+        public string Email { get; set; } = "";
+        public string Origem { get; set; } = "";
+        public string Destino { get; set; } = "";
+        public decimal PrecoAlvo { get; set; }
+    }
+}

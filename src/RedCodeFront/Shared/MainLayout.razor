@@ -1,0 +1,117 @@
+@inherits LayoutComponentBase
+
+<div class="fc-layout">
+    <nav class="fc-sidebar">
+        <div class="fc-logo">
+            <div class="fc-logo-icon">✈️</div>
+            <div>
+                <div class="fc-logo-text">FlyCompare</div>
+                <div class="fc-logo-sub">Metabuscador de Passagens</div>
+            </div>
+        </div>
+
+        <div class="fc-nav-section">
+            <div class="fc-nav-label">Principal</div>
+            <ul class="fc-nav">
+                <li>
+                    <NavLink href="" Match="NavLinkMatch.All" class="fc-nav-link">
+                        <span class="fc-nav-icon">🏠</span> Início
+                    </NavLink>
+                </li>
+                <li>
+                    <NavLink href="flycompare" class="fc-nav-link">
+                        <span class="fc-nav-icon">✈️</span> Buscar Passagens
+                    </NavLink>
+                </li>
+                <li>
+                    <NavLink href="alertas" class="fc-nav-link">
+                        <span class="fc-nav-icon">🔔</span> Meus Alertas
+                    </NavLink>
+                </li>
+            </ul>
+        </div>
+
+        <div class="fc-sidebar-footer">
+            <div class="fc-sidebar-badge">
+                <div class="fc-sidebar-dot"></div>
+                <div class="fc-sidebar-status">API <strong>Online</strong> · :5246</div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="fc-main">
+        @* Breadcrumbs (SPEC-033) *@
+        <div class="fc-breadcrumbs">
+            <a href="" class="fc-breadcrumb-link">🏠 FlyCompare</a>
+            @if (IsRotaAtiva("flycompare"))
+            {
+                <span class="fc-breadcrumb-sep">›</span>
+                <span class="fc-breadcrumb-current">Buscar Passagens</span>
+            }
+            else if (IsRotaAtiva("alertas"))
+            {
+                <span class="fc-breadcrumb-sep">›</span>
+                <span class="fc-breadcrumb-current">Meus Alertas</span>
+            }
+            else if (IsRotaAtiva("resultados"))
+            {
+                <span class="fc-breadcrumb-sep">›</span>
+                <a href="flycompare" class="fc-breadcrumb-link">Buscar Passagens</a>
+                <span class="fc-breadcrumb-sep">›</span>
+                <span class="fc-breadcrumb-current">Resultados</span>
+            }
+        </div>
+
+        <div class="fc-content">
+            @Body
+        </div>
+
+        @* Footer (SPEC-033) *@
+        <footer class="fc-footer">
+            <div class="fc-footer-content">
+                <div class="fc-footer-section">
+                    <div class="fc-footer-logo">✈️ FlyCompare</div>
+                    <div class="fc-footer-desc">Metabuscador inteligente de passagens aéreas. Compare preços em LATAM, GOL, Azul e Decolar.</div>
+                </div>
+                <div class="fc-footer-section">
+                    <div class="fc-footer-label">Links</div>
+                    <a href="" class="fc-footer-link">Início</a>
+                    <a href="flycompare" class="fc-footer-link">Buscar Passagens</a>
+                    <a href="alertas" class="fc-footer-link">Meus Alertas</a>
+                </div>
+                <div class="fc-footer-section">
+                    <div class="fc-footer-label">Tecnologia</div>
+                    <div class="fc-footer-info">.NET 10 · Blazor WASM</div>
+                    <div class="fc-footer-info">Dapper · SQLite</div>
+                    <div class="fc-footer-info">Hangfire · Puppeteer</div>
+                </div>
+            </div>
+            <div class="fc-footer-bottom">
+                <span>© 2026 FlyCompare — Projeto Acadêmico de Engenharia de Software</span>
+                <span class="fc-footer-version">v2.0.0</span>
+            </div>
+        </footer>
+    </main>
+</div>
+
+@* Mobile menu toggle (SPEC-033) *@
+<button class="fc-mobile-menu-btn" @onclick="ToggleMobileMenu" title="Menu">
+    <span>☰</span>
+</button>
+
+@code {
+    private bool mobileMenuAberto = false;
+
+    private bool IsRotaAtiva(string rota)
+    {
+        var uri = NavigationManager?.Uri ?? string.Empty;
+        return uri.Contains($"/{rota}", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void ToggleMobileMenu()
+    {
+        mobileMenuAberto = !mobileMenuAberto;
+    }
+
+    [Inject] private NavigationManager NavigationManager { get; set; } = default!;
+}

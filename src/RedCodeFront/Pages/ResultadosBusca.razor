@@ -1,0 +1,319 @@
+@page "/flycompare/resultados/{origem}/{destino}/{dataPartida}"
+@inject HttpClient Http
+@inject NavigationManager Nav
+
+<PageTitle>FlyCompare — @origem → @destino</PageTitle>
+
+<div class="fc-page-header">
+    <a href="/flycompare" class="fc-back-link">← Nova Busca</a>
+    <div class="fc-route-title">
+        <span class="fc-route-code">@origem → @destino</span>
+        <span class="fc-route-date">@FormatarData(dataPartida)</span>
+    </div>
+</div>
+
+@if (carregando)
+{
+    <div class="fc-loading">
+        <div class="fc-loading-spinner"></div>
+        <p>Buscando passagens...</p>
+    </div>
+}
+else if (erro)
+{
+    <div class="fc-card fc-card-error">
+        <p>@mensagem</p>
+    </div>
+}
+else if (resultados is not null)
+{
+    @* Filtros *@
+    <div class="fc-filters-bar">
+        <div class="fc-filter-group">
+            <label class="fc-filter-label">Companhia</label>
+            <div class="fc-filter-chips">
+                <button class="fc-chip @(filtroCompanhia == "" ? "fc-chip-active" : "")"
+                        @onclick="LimparFiltroCompanhia">
+                    Todas
+                </button>
+                @foreach (var cia in companhiasDisponiveis)
+                {
+                    <button class="fc-chip @(filtroCompanhia == cia ? "fc-chip-active" : "")"
+                            @onclick="() => { filtroCompanhia = cia; AplicarFiltros(); }">
+                        @cia
+                    </button>
+                }
+            </div>
+        </div>
+
+        <div class="fc-filter-group">
+            <label class="fc-filter-label">Paradas</label>
+            <div class="fc-filter-chips">
+                <button class="fc-chip @(filtroParadas == -1 ? "fc-chip-active" : "")"
+                        @onclick="() => { filtroParadas = -1; AplicarFiltros(); }">
+                    Todas
+                </button>
+                <button class="fc-chip @(filtroParadas == 0 ? "fc-chip-active" : "")"
+                        @onclick="() => { filtroParadas = 0; AplicarFiltros(); }">
+                    Direto
+                </button>
+                <button class="fc-chip @(filtroParadas == 1 ? "fc-chip-active" : "")"
+                        @onclick="() => { filtroParadas = 1; AplicarFiltros(); }">
+                    @("1 parada")
+                </button>
+            </div>
+        </div>
+
+        <div class="fc-filter-group">
+            <label class="fc-filter-label">Ordenar por</label>
+            <select class="fc-input" value="@ordenacao" @onchange="OnOrdenacaoChange">
+                <option value="preco">Menor Preco</option>
+                <option value="duracao">Menor Duracao</option>
+                <option value="partida">Partida</option>
+                <option value="chegada">Chegada</option>
+            </select>
+        </div>
+    </div>
+
+    @* Resultados *@
+    <div class="fc-results-info">
+        <span>@resultadosFiltrados.Count passagem(ns) encontrada(s)</span>
+        @if (filtroCompanhia != "" || filtroParadas >= 0)
+        {
+            <button class="fc-btn-clear" @onclick="LimparFiltros">Limpar filtros</button>
+        }
+    </div>
+
+    @if (resultadosFiltrados.Count == 0)
+    {
+        <div class="fc-empty">
+            <span class="fc-empty-icon">✈️</span>
+            <p>Nenhuma passagem encontrada com os filtros selecionados.</p>
+        </div>
+    }
+    else
+    {
+        <div class="fc-results-list">
+            @foreach (var voo in resultadosFiltrados)
+            {
+                <div class="fc-result-card">
+                    <div class="fc-result-left">
+                        <div class="fc-result-companhia">
+                            <span class="fc-cia-badge fc-cia-@voo.Companhia.ToLower()">@voo.Companhia</span>
+                            <span class="fc-voo-codigo">@voo.CodigoVoo</span>
+                        </div>
+                        <div class="fc-result-horarios">
+                            <div class="fc-horario-block">
+                                <span class="fc-horario">@voo.Partida.ToString("HH:mm")</span>
+                                <span class="fc-local">@voo.Origem</span>
+                            </div>
+                            <div class="fc-duracao">
+                                <span class="fc-duracao-linha"></span>
+                                <span class="fc-duracao-texto">@FormatarDuracao(voo.DuracaoMinutos)</span>
+                                @if (voo.Paradas == 0)
+                                {
+                                    <span class="fc-direto">Direto</span>
+                                }
+                                else
+                                {
+                                    <span class="fc-escala">@voo.Paradas parada(s)</span>
+                                }
+                            </div>
+                            <div class="fc-horario-block">
+                                <span class="fc-horario">@voo.Chegada.ToString("HH:mm")</span>
+                                <span class="fc-local">@voo.Destino</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="fc-result-right">
+                        @* SPEC-034: Score de recomendacao *@
+                        @if (analises.TryGetValue(voo.CodigoVoo, out var analise))
+                        {
+                            <div class="fc-score-badge fc-score-@analise.Score"
+                                 title="@analise.Justificativa">
+                                <span class="fc-score-stars">@analise.EmojiScore</span>
+                                <span class="fc-score-label">@analise.LabelScore</span>
+                            </div>
+                        }
+                        <div class="fc-preco-area">
+                            <div class="fc-preco">R$ @voo.PrecoTotal.ToString("F2")</div>
+                            <div class="fc-tarifa">@voo.TipoTarifa</div>
+                            @if (voo.BagagemIncluida)
+                            {
+                                <div class="fc-bagagem">🧳 Bagagem inclusa</div>
+                            }
+                            else
+                            {
+                                <div class="fc-bagagem fc-sem-bagagem">Sem bagagem</div>
+                            }
+                        </div>
+                        <a href="@voo.UrlCompra" target="_blank" class="fc-btn-comprar">
+                            Ir para o site →
+                        </a>
+                        <div class="fc-fonte">@voo.Fonte</div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+}
+
+@code {
+    [Parameter] public string origem { get; set; } = string.Empty;
+    [Parameter] public string destino { get; set; } = string.Empty;
+    [Parameter] public string dataPartida { get; set; } = string.Empty;
+
+    private List<ResultadoBusca>? resultados;
+    private List<ResultadoBusca> resultadosFiltrados = new();
+    private List<string> companhiasDisponiveis = new();
+    private Dictionary<string, AnalisePrecoResponse> analises = new();
+    private string filtroCompanhia = "";
+    private int filtroParadas = -1;
+    private string ordenacao = "preco";
+    private bool carregando = true;
+    private bool erro = false;
+    private string mensagem = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarResultados();
+    }
+
+    private async Task CarregarResultados()
+    {
+        carregando = true;
+        erro = false;
+        mensagem = string.Empty;
+
+        try
+        {
+            var dataFormatada = dataPartida;
+            // Ensure date is in yyyy-MM-dd format
+            if (DateTime.TryParse(dataPartida, out var dt))
+                dataFormatada = dt.ToString("yyyy-MM-dd");
+
+            var url = "/api/voos/busca?origem=" + Uri.EscapeDataString(origem) +
+                      "&destino=" + Uri.EscapeDataString(destino) +
+                      "&dataPartida=" + Uri.EscapeDataString(dataFormatada);
+            var resp = await Http.GetAsync(url);
+
+            if (resp.IsSuccessStatusCode)
+            {
+                resultados = await resp.Content.ReadFromJsonAsync<List<ResultadoBusca>>() ?? new();
+                companhiasDisponiveis = resultados.Select(r => r.Companhia).Distinct().OrderBy(c => c).ToList();
+                AplicarFiltros();
+
+                // SPEC-034: Motor de Regras + Score — analisa precos
+                _ = AnalisarPrecosAsync(dataFormatada);
+            }
+            else
+            {
+                var erroBody = await resp.Content.ReadAsStringAsync();
+                mensagem = string.IsNullOrWhiteSpace(erroBody) ? "Erro ao buscar passagens." : erroBody;
+                erro = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            mensagem = "Erro de conexao: " + ex.Message;
+            erro = true;
+        }
+        finally
+        {
+            carregando = false;
+        }
+    }
+
+    private void AplicarFiltros()
+    {
+        if (resultados is null) return;
+
+        var query = resultados.AsEnumerable();
+
+        // Filtro por companhia
+        if (!string.IsNullOrWhiteSpace(filtroCompanhia))
+            query = query.Where(v => v.Companhia == filtroCompanhia);
+
+        // Filtro por paradas
+        if (filtroParadas >= 0)
+            query = query.Where(v => v.Paradas == filtroParadas);
+
+        // Ordenacao
+        query = ordenacao switch
+        {
+            "duracao" => query.OrderBy(v => v.DuracaoMinutos).ThenBy(v => v.PrecoTotal),
+            "partida" => query.OrderBy(v => v.Partida),
+            "chegada" => query.OrderBy(v => v.Chegada),
+            _ => query.OrderBy(v => v.PrecoTotal).ThenBy(v => v.DuracaoMinutos),
+        };
+
+        resultadosFiltrados = query.ToList();
+    }
+
+    private void LimparFiltros()
+    {
+        filtroCompanhia = "";
+        filtroParadas = -1;
+        ordenacao = "preco";
+        AplicarFiltros();
+    }
+
+    private void LimparFiltroCompanhia()
+    {
+        filtroCompanhia = "";
+        AplicarFiltros();
+    }
+
+    private void OnOrdenacaoChange(ChangeEventArgs e)
+    {
+        ordenacao = e.Value?.ToString() ?? "preco";
+        AplicarFiltros();
+    }
+
+    private string FormatarData(string data)
+    {
+        if (DateTime.TryParse(data, out var dt))
+            return dt.ToString("ddd, dd MMM yyyy");
+        return data;
+    }
+
+    private string FormatarDuracao(int minutos)
+    {
+        var h = minutos / 60;
+        var m = minutos % 60;
+        return h + "h" + m.ToString("00");
+    }
+
+    /// <summary>
+    /// SPEC-034: Chama o endpoint de analise de precos (Motor de Regras + Score).
+    /// Fire-and-forget — os scores aparecem quando a API responder.
+    /// </summary>
+    private async Task AnalisarPrecosAsync(string dataPartida)
+    {
+        try
+        {
+            if (resultados is null || resultados.Count == 0)
+                return;
+
+            var request = new { resultados, dataPartida };
+            var resp = await Http.PostAsJsonAsync("/api/voos/analise", request);
+
+            if (resp.IsSuccessStatusCode)
+            {
+                var analisesList = await resp.Content
+                    .ReadFromJsonAsync<List<AnalisePrecoResponse>>() ?? new();
+
+                analises = analisesList
+                    .Where(a => !string.IsNullOrEmpty(a.CodigoVoo))
+                    .ToDictionary(a => a.CodigoVoo);
+
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch
+        {
+            // Analise e uma melhoria visual — falhas nao bloqueiam a pagina
+        }
+    }
+}

@@ -1,0 +1,99 @@
+@page "/"
+@inject NavigationManager Navigation
+
+<PageTitle>FlyCompare — Metabuscador de Passagens Aéreas</PageTitle>
+
+<div class="fc-hero">
+    <div class="fc-hero-badge">✈️ Metabuscador Inteligente de Passagens</div>
+    <h1 class="fc-hero-title">FlyCompare</h1>
+    <p class="fc-hero-sub">Compare preços de passagens aéreas em tempo real. Pesquise em LATAM, GOL, Azul e Decolar em um único lugar.</p>
+</div>
+
+@* Stats strip *@
+<div class="fc-stats-strip">
+    <div class="fc-stat-item">
+        <div class="fc-stat-num">4</div>
+        <div class="fc-stat-label">Companhias Monitoradas</div>
+    </div>
+    <div class="fc-stat-divider"></div>
+    <div class="fc-stat-item">
+        <div class="fc-stat-num">22</div>
+        <div class="fc-stat-label">Rotas Populares</div>
+    </div>
+    <div class="fc-stat-divider"></div>
+    <div class="fc-stat-item">
+        <div class="fc-stat-num">15</div>
+        <div class="fc-stat-label">Aeroportos Brasileiros</div>
+    </div>
+    <div class="fc-stat-divider"></div>
+    <div class="fc-stat-item">
+        <div class="fc-stat-num">30min</div>
+        <div class="fc-stat-label">Cache Inteligente</div>
+    </div>
+</div>
+
+@* Main Action Cards *@
+<div class="fc-cards-grid">
+    <button class="fc-card fc-card-link" @onclick="IrParaBusca">
+        <div class="fc-card-icon">🔍</div>
+        <div class="fc-card-name">Buscar Passagens</div>
+        <div class="fc-card-desc">Informe origem, destino e data para comparar preços de múltiplas companhias aéreas em segundos.</div>
+        <div class="fc-card-arrow">Iniciar busca →</div>
+    </button>
+
+    <button class="fc-card fc-card-link" @onclick="IrParaAlertas">
+        <div class="fc-card-icon">🔔</div>
+        <div class="fc-card-name">Monitorar Preços</div>
+        <div class="fc-card-desc">Crie alertas personalizados e seja notificado quando o preço da sua rota favorita atingir o valor desejado.</div>
+        <div class="fc-card-arrow">Meus alertas →</div>
+    </button>
+
+    <button class="fc-card fc-card-link" @onclick="IrParaBusca">
+        <div class="fc-card-icon">📊</div>
+        <div class="fc-card-name">Histórico de Preços</div>
+        <div class="fc-card-desc">Acompanhe a evolução dos preços ao longo do tempo e descubra o melhor momento para comprar.</div>
+        <div class="fc-card-arrow">Explorar →</div>
+    </button>
+</div>
+
+@* Feature Section *@
+<div class="fc-section">
+    <div class="fc-section-title">⚡ Por que usar o FlyCompare</div>
+    <div class="fc-features-grid">
+        <div class="fc-feature">
+            <div class="fc-feature-icon">🔄</div>
+            <div class="fc-feature-title">Múltiplas Companhias</div>
+            <div class="fc-feature-desc">Resultados consolidados de LATAM, GOL, Azul e Decolar em uma única tela.</div>
+        </div>
+        <div class="fc-feature">
+            <div class="fc-feature-icon">⚡</div>
+            <div class="fc-feature-title">Cache Inteligente</div>
+            <div class="fc-feature-desc">Buscas subsequentes são instantâneas com cache em memória e Redis.</div>
+        </div>
+        <div class="fc-feature">
+            <div class="fc-feature-icon">🔔</div>
+            <div class="fc-feature-title">Alertas de Preço</div>
+            <div class="fc-feature-desc">Defina um preço alvo e seja notificado automaticamente quando ele for atingido.</div>
+        </div>
+        <div class="fc-feature">
+            <div class="fc-feature-icon">📈</div>
+            <div class="fc-feature-title">Histórico Completo</div>
+            <div class="fc-feature-desc">Visualize a evolução dos preços e tome a melhor decisão de compra.</div>
+        </div>
+        <div class="fc-feature">
+            <div class="fc-feature-icon">🎯</div>
+            <div class="fc-feature-title">Filtros Avançados</div>
+            <div class="fc-feature-desc">Filtre por companhia, número de paradas e ordene por preço, duração ou horário.</div>
+        </div>
+        <div class="fc-feature">
+            <div class="fc-feature-icon">💻</div>
+            <div class="fc-feature-title">100% Nacional</div>
+            <div class="fc-feature-desc">Foco em rotas domésticas brasileiras com 15 aeroportos e 22 rotas populares.</div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private void IrParaBusca() => Navigation.NavigateTo("flycompare");
+    private void IrParaAlertas() => Navigation.NavigateTo("alertas");
+}
